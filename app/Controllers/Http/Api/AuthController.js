@@ -67,7 +67,7 @@ class AuthController {
         
         if (await auth.attempt(email, password)) {
           let user = await User.findBy('email', email)
-          let token = await auth.generate(user)
+          let token = await auth.withRefreshToken().generate(user)
 
           Object.assign(user, token)
           return response.json(user)

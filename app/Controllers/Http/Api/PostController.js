@@ -1,5 +1,6 @@
 'use strict'
 const Post = use('App/Models/Post');
+const { validate } = use('Validator');
 
 class PostController {
   async getPosts({request, response}) {
@@ -13,16 +14,32 @@ class PostController {
 
   async store({request, auth, response}) {
 
-    try {
-      // if (await auth.check()) {
-      let post = await auth.user.posts().create(request.all())
-      await post.load('user');
-      return response.json(post)
-      // }
+    const rules = {
+      title: 'required',
+      description: 'required'
+    };
 
-    } catch (e) {
-      console.log(e)
-      return response.json({message: 'You are not authorized to perform this action'})
+    const fields = request.all();
+
+    const validation = await validate(fields, rules);
+
+    if (!validation.fails()) {
+
+        
+      try {
+        // if (await auth.check()) {
+        let post = await auth.user.posts().create(fields)
+        await post.load('user');
+        return response.json(post)
+        // }
+
+      } catch (e) {
+        console.log(e)
+        return response.json({message: 'You are not authorized to perform this action'})
+      }
+
+    } else {
+      response.status(401).send(validation.messages());
     }
 
   }
